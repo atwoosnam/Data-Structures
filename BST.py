@@ -1,6 +1,14 @@
 # BST.py
 
-import numpy as np 
+import numpy as np
+# try:
+# 	# for Python2
+# 	from Tkinter import *
+
+# except ImportError:	
+# 	# for Python3
+# 	from tkinter import *
+
 
 class Node:
 	def __init__(self, val):
@@ -8,6 +16,7 @@ class Node:
 		self.parent = None
 		self.left = None
 		self.right = None
+		self.nodesArray = []
 
 
 class BST:
@@ -60,6 +69,32 @@ class BST:
 		if root.right != None:
 			self.printout(root.right)
 
+	# def graph(self):
+
+	def populateArray(self, node):
+		if node == self.root:
+			self.nodesArray = []
+			self.nodesArray.append(node.val)
+
+		if node.left == None:
+			self.nodesArray.append(None)
+		else:
+			self.nodesArray.append(node.left.val)
+
+		if node.right == None:
+			self.nodesArray.append(None)
+		else:
+			self.nodesArray.append(node.right.val)
+
+		''' This level done, proceed to next level '''
+		if node.left != None:
+			self.populateArray(node.left)
+		if node.right != None:
+			self.populateArray(node.right)
+
+		return self.nodesArray
+
+
 
 if __name__ == '__main__':
 	tree = BST()
@@ -71,6 +106,7 @@ if __name__ == '__main__':
 	tree.insert(20, tree.root)
 
 	tree.printout(tree.root)
+	print("\n" + str(tree.populateArray(tree.root)))
 
 
 
