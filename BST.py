@@ -1,6 +1,6 @@
 # BST.py
 
-import numpy as np
+# import numpy as np
 # try:
 # 	# for Python2
 # 	from Tkinter import *
@@ -16,21 +16,21 @@ class Node:
 		self.parent = None
 		self.left = None
 		self.right = None
-		self.nodesArray = []
 
 
 class BST:
 	def __init__(self):
-		# self.nodes = []
+		self.nodesArray = []
 		self.root = None
 
 
 	def search(self, val, start_node):
+
 		if start_node.val == val:
 			return start_node
-		elif start_node.val > val:
+		elif start_node.val > val and start_node.left != None:
 			return self.search(val, start_node.left)
-		elif start_node.val < val:
+		elif start_node.val < val and start_node.right != None:
 			return self.search(val, start_node.right)
 
 		return None
@@ -59,6 +59,13 @@ class BST:
 			else:
 				self.insert(val, start_node.right)
 
+
+
+	def delete(self, val, start_node):
+		pass
+
+
+
 	def printout(self, root):
 		v = root.val
 		l = root.left.val if root.left != None else None
@@ -76,15 +83,12 @@ class BST:
 			self.nodesArray = []
 			self.nodesArray.append(node.val)
 
-		if node.left == None:
-			self.nodesArray.append(None)
-		else:
-			self.nodesArray.append(node.left.val)
+		l = None if node.left == None else node.left.val
+		self.nodesArray.append(l)
 
-		if node.right == None:
-			self.nodesArray.append(None)
-		else:
-			self.nodesArray.append(node.right.val)
+		r = None if node.right == None else node.right.val
+		self.nodesArray.append(r)
+
 
 		''' This level done, proceed to next level '''
 		if node.left != None:
@@ -94,6 +98,10 @@ class BST:
 
 		return self.nodesArray
 
+	def graph(self):
+		new_window = Tk()
+		new_window.geometry("1200x800")
+		new_window.mainloop()
 
 
 if __name__ == '__main__':
@@ -107,6 +115,10 @@ if __name__ == '__main__':
 
 	tree.printout(tree.root)
 	print("\n" + str(tree.populateArray(tree.root)))
+
+	print(tree.search(20, tree.root))
+
+	# tree.graph()
 
 
 
