@@ -24,6 +24,11 @@ class Node:
 		self.left = None
 		self.right = None
 
+	def isEmpty(self):
+		if (self.val == None):
+			return True
+
+
 
 class BST:
 	def __init__(self):
@@ -68,13 +73,13 @@ class BST:
 
 
 	def findMax(self, start_node):
-		if start_node.right == None or start_node.right.val == None:
+		if start_node.right == None or start_node.right.isEmpty():
 			return start_node
 		return findMax(start_node.right)
 
 
 	def findMin(self, start_node):
-		if start_node.left == None or start_node.left.val == None:
+		if start_node.left == None or start_node.left.isEmpty():
 			return start_node
 		return self.findMin(start_node.left)
 
@@ -83,71 +88,87 @@ class BST:
 
 		this_node = self.search(val, self.root)
 
-		if this_node == None:
+		deletingRoot = False	
+
+		if this_node == None or this_node.isEmpty():
 			print ("No such node to delete: {0}".format(val))
 			return None
 
-		print ("\nDeleting {0}".format(this_node.val))
-
 		if this_node == self.root:
-			# print("DELETING ROOT")
-			replacement = self.findMax(this_node.left)
+			print ("\nDeleting ROOT {0}".format(this_node.val))
+			deletingRoot = True
+		else:
+			print ("\nDeleting {0}".format(this_node.val))
 
-			if replacement.val == None:
-				replacement = self.findMin(this_node.right)
 
-			elif replacement == this_node:
-				raise Exception("No viable replacement")
+		if this_node.left == None or this_node.left.isEmpty():
+			if this_node.right == None or this_node.right.isEmpty():
+				# scenario = 0 	# no children --> delete node
+				print("del'ing childless node")
+				this_node.__del__()
 
-			this_node.val = replacement.val
-			print("del'ing replacement")
-			replacement.__del__()
-
-		# no children: Delete this node
-		elif this_node.left == None and this_node.right == None:
-			print("del'ing childless node")
-			this_node.__del__()
-
-		# one child? splice this node out to join its parent and its child
-		elif this_node.left != None and this_node.right == None:
-			# give child new parent
-			this_node.left.parent = this_node.parent
-			# give parent new child
-			if this_node.parent.left == this_node:
-				this_node.parent.left = this_node.left
-			elif this_node.parent.right == this_node:
-				this_node.parent.right = this_node.left
 			else:
-				raise Exception("Unexpected lineage: node to delete is not a child of its parent")
+				# scenario = 1 	# 1 (right) child --> splice this node out to join its parent and its child
+				# give child new parent
+				this_node.right.parent = this_node.parent
 
-			print("del'ing spliced-out node (l)")
-			this_node.__del__()
+				if not deletingRoot:
+					# give parent new child
+					if this_node.parent.left == this_node:
+						this_node.parent.left = this_node.right
+					elif this_node.parent.right == this_node:
+						this_node.parent.right = this_node.right
+					else:
+						raise Exception("Unexpected lineage: node to delete is not a child of its parent")
+				else:
+					self.root = this_node.right
 
-		elif this_node.left == None and this_node.right != None:
-			# give child new parent
-			this_node.right.parent = this_node.parent
-			# give parent new child
-			if this_node.parent.left == this_node:
-				this_node.parent.left = this_node.right
-			elif this_node.parent.right == this_node:
-				this_node.parent.right = this_node.right
+
+				print("del'ing spliced-out node (r)")
+				this_node.__del__()
+
+		else:
+			if this_node.right == None or this_node.right.isEmpty():
+				# scenario = 2 	# 1 (left) child --> splice this node out to join its parent and its child
+				# give child new parent
+				this_node.left.parent = this_node.parent
+
+				if not deletingRoot:
+					# give parent new child
+					if this_node.parent.left == this_node:
+						this_node.parent.left = this_node.left
+					elif this_node.parent.right == this_node:
+						this_node.parent.right = this_node.left
+					else:
+						raise Exception("Unexpected lineage: node to delete is not a child of its parent")
+				else:
+					self.root = this_node.left
+
+				print("del'ing spliced-out node (l)")
+				this_node.__del__()
+
 			else:
-				raise Exception("Unexpected lineage: node to delete is not a child of its parent")
+				# scenario = 3 	# two children
+				print("del'ing 2-child node")
+				# find max of left subtree
+				replacement = self.findMax(this_node.left)
 
-			print("del'ing spliced-out node (r)")
-			this_node.__del__()
+				if replacement == this_node:
+					raise Exception("No left subtree")
+					# use min of right subtree instead
 
-		# two children
-		elif this_node.left != None and this_node.right != None:
-			# find largest leaf in left subtree, swap values & delete that leaf
-			maxLeaf = self.findMax(this_node.left)
-			if maxLeaf == this_node:
-				raise Exception("Maximum Node Error: node to delete is greater than its right child")
+				if replacement.right != None:
+					raise Exception("Max of left subtree has a right child (it shouldn't)")
 
-			this_node.val = maxLeaf.val
+				if replacement.left == None:	# replacement has no children
+					this_node.val = replacement.val
+					replacement.__del__()
 
-			print("del'ing swapped max leaf")
-			maxLeaf.__del__()
+				else: 	# replacement has 1 child
+					child = replacement.left
+					replacement.parent.right = child
+					replacement.__del__()
+
 
 
 	def printout(self, root):
@@ -171,7 +192,6 @@ class BST:
 
 		r = None if node.right == None else node.right.val
 		self.nodesArray.append(r)
-
 
 		''' This level done, proceed to next level '''
 		if node.left != None:
@@ -227,6 +247,10 @@ if __name__ == '__main__':
 		if tree.search(i, tree.root) != None:
 			tree.delete(i)
 			print(str(tree.populateArray(tree.root)) + " : " + str(len(tree.nodesArray)))
+			if tree.root.val == None:
+				print("\n"*2)
+				print("ROOTLESS TREE")
+				exit(0)
 
 
 
