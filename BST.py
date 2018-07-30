@@ -1,5 +1,6 @@
 # BST.py
 
+
 # import numpy as np
 # try:
 # 	# for Python2
@@ -182,24 +183,19 @@ class BST:
 			self.printout(root.right)
 
 
-	def populateArray(self, node):
-		if node == self.root:
-			self.nodesArray = []
-			self.nodesArray.append(node.val)
+	def populateArray(self):
+		self.nodesArray = [self.root]
+		i = 0
+		while (i < len(self.nodesArray)):
+			current = self.nodesArray[i]
+			if current != None and current.val != None:
+				self.nodesArray.append(current.left)
+				self.nodesArray.append(current.right)
+			i += 1
 
-		l = None if node.left == None else node.left.val
-		self.nodesArray.append(l)
-
-		r = None if node.right == None else node.right.val
-		self.nodesArray.append(r)
-
-		''' This level done, proceed to next level '''
-		if node.left != None:
-			if node.left.val != None:
-				self.populateArray(node.left)
-		if node.right != None:
-			if node.right.val != None:
-				self.populateArray(node.right)
+		for i in range(len(self.nodesArray)):
+			node = self.nodesArray[i]
+			self.nodesArray[i] = node.val if node != None else None
 
 		return self.nodesArray
 
@@ -210,51 +206,40 @@ class BST:
 		new_window.mainloop()
 
 
+
+class unitTester():
+	def __init__(self):
+		self.tree = BST()
+
+	def testInsert(self):
+		self.tree.insert(15, self.tree.root)
+		self.tree.insert(20, self.tree.root)
+		self.tree.insert(27, self.tree.root)
+		self.tree.insert(3, self.tree.root)
+		self.tree.insert(18, self.tree.root)
+		self.tree.insert(13, self.tree.root)
+		self.tree.insert(8, self.tree.root)
+		self.tree.insert(5, self.tree.root)
+		self.tree.insert(17, self.tree.root)
+		self.tree.insert(29, self.tree.root)
+		self.tree.insert(26, self.tree.root)
+		self.tree.insert(4, self.tree.root)
+		self.tree.insert(14, self.tree.root)
+		self.tree.insert(16, self.tree.root)
+		self.tree.insert(1, self.tree.root)
+		self.tree.printout(self.tree.root)
+
+		test_results = self.tree.populateArray()
+		expected_results = [15,3,20,1,13,18,27,None,None,8,14,17,None,26,29,5,None,None,None,16,None,None,None,None,None,4,None,None,None,None,None]
+		assert (test_results == expected_results), "TEST CASE FAILURE: BST.insert()\nResult  :\t {0}\nExpected:\t {1}".format(test_results, expected_results)
+
+
+
 if __name__ == '__main__':
-	tree = BST()
+	tester = unitTester()
+	tester.testInsert()
 
-	tree.insert(14, tree.root)
-	tree.insert(16, tree.root)
-	tree.insert(1, tree.root)
-	tree.insert(18, tree.root)
-	tree.insert(13, tree.root)
-	tree.insert(8, tree.root)
-	tree.insert(15, tree.root)
-	tree.insert(20, tree.root)
-	tree.insert(5, tree.root)
-	tree.insert(27, tree.root)
-	tree.insert(3, tree.root)
-	tree.insert(17, tree.root)
-	tree.insert(29, tree.root)
-	tree.insert(26, tree.root)
-	tree.insert(4, tree.root)
-
-
-	tree.printout(tree.root)
-	print("\n")
-
-	print(str(tree.populateArray(tree.root)) + " : " + str(len(tree.nodesArray)))
-
-	# print(tree.search(20, tree.root))
-
-	# tree.delete(20)
-	# print(str(tree.populateArray(tree.root)) + " : " + str(len(tree.nodesArray)))
-
-	# tree.delete(18)
-	# print(str(tree.populateArray(tree.root)) + " : " + str(len(tree.nodesArray)))
-
-	for i in range(1,30):
-		if tree.search(i, tree.root) != None:
-			tree.delete(i)
-			print(str(tree.populateArray(tree.root)) + " : " + str(len(tree.nodesArray)))
-			if tree.root.val == None:
-				print("\n"*2)
-				print("ROOTLESS TREE")
-				exit(0)
-
-
-
-	# tree.graph()
+	
 
 
 
