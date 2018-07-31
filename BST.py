@@ -2,13 +2,14 @@
 
 
 # import numpy as np
-# try:
-# 	# for Python2
-# 	from Tkinter import *
+import math
+try:
+	# for Python2
+	from Tkinter import *
 
-# except ImportError:	
-# 	# for Python3
-# 	from tkinter import *
+except ImportError:	
+	# for Python3
+	from tkinter import *
 
 
 class Node:
@@ -183,7 +184,7 @@ class BST:
 			self.printout(root.right)
 
 
-	def populateArray(self):
+	def getNodesArray(self):
 		self.nodesArray = [self.root]
 		i = 0
 		while (i < len(self.nodesArray)):
@@ -193,25 +194,146 @@ class BST:
 				self.nodesArray.append(current.right)
 			i += 1
 
-		for i in range(len(self.nodesArray)):
-			node = self.nodesArray[i]
-			self.nodesArray[i] = node.val if node != None else None
-
 		return self.nodesArray
 
 
 	def graph(self):
 		new_window = Tk()
-		new_window.geometry("1200x800")
+		new_window.geometry("1280x800")
+		arr = self.getNodesArray()
+		w = Window(new_window, arr)
 		new_window.mainloop()
 
+
+
+class Window(Frame):
+
+	# Define settings upon initialization. Here you can specify
+	def __init__(self, master, arr):
+		
+		# parameters that you want to send through the Frame class. 
+		Frame.__init__(self, master)   
+
+		# allowing the widget to take the full space of the root window
+		self.pack(fill=BOTH, expand=1)
+
+		#reference to the master widget, which is the tk window                 
+		self.master = master
+		# changing the title of our master widget      
+		self.master.title("BST")
+
+		self.canvas = Canvas(self)
+
+		root = arr[0]
+		numLeft = 0
+		numRight = 0
+		numLeaves = 0
+		for i in range(len(arr)):		# efficiency can be improved from O(n) here
+			if arr[i] != None:
+				if arr[i] < root:
+					numLeft += 1
+				else:
+					numRight += 1
+			else:
+				numLeaves += 1
+
+		rows = max(numLeft, numRight)
+		columns = int(2**math.ceil(math.log(numLeaves,2)))+1
+		mid = columns/2
+
+
+		print("rows: {0}, cols: {1}, numLeaves: {2}, mid: {3}".format(rows, columns, numLeaves, mid))
+		# n = 0
+		# for row in range(rows):
+		# 	for col in range(columns):
+		# 		Label(self.canvas, text=str(n)).grid(row=row, column=col)
+		# 		n += 1
+
+		self.place(arr[0], 0, mid*2)
+
+
+		''' MAP NODES ONTO GRID '''
+		''' (nodes may be null) '''
+
+		# ARR IDX		GRID
+			# 0 ----- 0, 1*mid/1
+			
+			# 1 ----- 1, 1*mid/2
+			# 2 ----- 1, 3*mid/2
+			
+			# 3 ----- 2, 1*mid/4 
+			# 4 ----- 2, 3*mid/4
+			# 5 ----- 2, 5*mid/4
+			# 6 ----- 2, 7*mid/4
+
+			# 7 ----- 3, 1*mid/8 
+			# 8 ----- 3, 3*mid/8
+			# 9 ----- 3, 5*mid/8
+			# 10 ---- 3, 7*mid/8
+			# 11 ---- 3, 9*mid/8 
+			# 12 ---- 3,11*mid/8
+			# 13 ---- 3,13*mid/8
+			# 14 ---- 3,15*mid/8
+
+
+
+
+
+		# text_fields = []
+
+		# Label(canvas,text="Specify either a singular cell \nor a range of cells (e.g. 6-14)").grid(row=0,column=0)
+		# for row in range(1,self.ROWS+1):
+		# 	Label(canvas, text="Cell(s) to stimulate:").grid(row=row, column=0)
+		# 	Label(canvas, text="Stimulation start:").grid(row=row, column=2)
+		# 	Label(canvas, text="Stimulation end:").grid(row=row, column=4)
+		# 	entry1 = Entry(canvas)
+		# 	entry2 = Entry(canvas)
+		# 	entry3 = Entry(canvas)
+		# 	entry1.grid(row=row, column=1)
+		# 	entry2.grid(row=row, column=3)			
+		# 	entry3.grid(row=row, column=5)
+		# 	self.text_fields.append(entry1)
+		# 	self.text_fields.append(entry2)
+		# 	self.text_fields.append(entry3)
+
+		# b = Button(canvas, text="ADD THIS TRIAL TO THE SCHEDULE", justify=CENTER, command=self.add_to_schedule).grid(row=self.ROWS+1, column=3)
+
+		self.canvas.pack(fill=Y, expand=True)
+
+		# self.text_fields = []
+		# self.ROWS = 10
+		# self.SCHEDULE = SCHEDULE
+
+		#with that, we want to then run init_window, which doesn't yet exist
+		# self.init_window()
+	
+	def place(self, node, row, col):
+		print("placing {0} at ({1},{2})".format(node.val, row, col))
+		if node != None:
+			Label(self.canvas, text=node.val).grid(row=row, column=col, columnspan=1)
+		if node.left != None:
+			self.place(node.left, row+1, col/2)
+		if node.right != None:
+			self.place(node.right, row+1, 3*col/2)
+
+
+
+
+	def client_exit(self):
+		exit()
+
+	def warn(self,msg):
+		messagebox.showerror("Error", msg)
+
+	def quit(self):
+		self.master.destroy()
 
 
 class unitTester():
 	def __init__(self):
 		self.tree = BST()
 
-	def testInsert(self):
+	def runTests(self):
 		self.tree.insert(15, self.tree.root)
 		self.tree.insert(20, self.tree.root)
 		self.tree.insert(27, self.tree.root)
@@ -227,17 +349,30 @@ class unitTester():
 		self.tree.insert(14, self.tree.root)
 		self.tree.insert(16, self.tree.root)
 		self.tree.insert(1, self.tree.root)
+
 		self.tree.printout(self.tree.root)
 
-		test_results = self.tree.populateArray()
+		test_results = self.tree.getNodesArray()
+		# convert node objects to node values
+		for i in range(len(test_results)):
+			node = test_results[i]
+			test_results[i] = node.val if node != None else None
+
 		expected_results = [15,3,20,1,13,18,27,None,None,8,14,17,None,26,29,5,None,None,None,16,None,None,None,None,None,4,None,None,None,None,None]
 		assert (test_results == expected_results), "TEST CASE FAILURE: BST.insert()\nResult  :\t {0}\nExpected:\t {1}".format(test_results, expected_results)
 
+		self.tree.delete(20)
+		self.tree.printout(self.tree.root)
+
+		self.tree.graph()
+
+
+		# expected_results = [15,3,20,1,13,18,27,None,None,8,14,17,None,26,29,5,None,None,None,16,None,None,None,None,None,4,None,None,None,None,None]
 
 
 if __name__ == '__main__':
 	tester = unitTester()
-	tester.testInsert()
+	tester.runTests()
 
 	
 
