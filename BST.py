@@ -18,9 +18,11 @@ class Node:
 		self.parent = None
 		self.left = None
 		self.right = None
+		self.grid_col = None
+		self.grid_row = None
 
 	def __del__(self):
-		print("__del__({0})".format(self.val))
+		# print("__del__({0})".format(self.val))
 		self.val = None
 		self.parent = None
 		self.left = None
@@ -51,6 +53,9 @@ class BST:
 		 
 
 	def insert(self, val, start_node):
+		if val == None:
+			raise Exception("Can't insert a null value")
+
 		n = Node(val=val)
 		if self.root == None:
 			self.root = n
@@ -172,12 +177,11 @@ class BST:
 					replacement.__del__()
 
 
-
 	def printout(self, root):
 		v = root.val
 		l = root.left.val if root.left != None else None
 		r = root.right.val if root.right != None else None
-		print("Node: {0}    L: {1}		R:{2}".format(v if v >=10 else ' ' + str(v), l, r))
+		print("Node: {0}    L: {1}		R:{2}, 		Parent:{3}".format(v if v >=10 else ' ' + str(v), l, r, root.parent.val if root.parent != None else None))
 		if root.left != None:
 			self.printout(root.left)
 		if root.right != None:
@@ -201,122 +205,210 @@ class BST:
 		new_window = Tk()
 		new_window.geometry("1280x800")
 		arr = self.getNodesArray()
-		w = Window(new_window, arr)
+
+		depth = self.calculateDepth()
+		w = Plot(new_window, arr, depth)
 		new_window.mainloop()
 
 
+	def calculateDepth(self):
+		# self.printout(self.root)
+		arr = self.getNodesArray()
+		start_node = arr[0]
 
-class Window(Frame):
+		# find last node in nodesArray (aka "deepest" node)
+		for node in arr: 	# this would be quicker starting at the end of the array
+			if node != None:
+				end_node = node
+
+		depth = self.DFS(start_node, end_node) + 1
+		print("deepest node: {0}, depth: {1}".format(end_node.val, depth))
+		return depth
+
+
+	def DFS(self, start_node, end_node):
+		''' Find distance from start_node to end_node '''
+		if start_node == None: return None
+
+		if start_node.left == end_node or start_node.right == end_node:
+			return 1
+		elif start_node.left == None and start_node.right == None:
+			return None
+		
+		else:
+			l = self.DFS(start_node.left,end_node)
+			if l == None:
+				r = self.DFS(start_node.right, end_node) 
+				if r == None:
+					raise Exception("end_node is unreachable by DFS")
+				else: return 1 + r
+			else: return 1 + l
+
+
+
+class Plot(Frame):
 
 	# Define settings upon initialization. Here you can specify
-	def __init__(self, master, arr):
+	def __init__(self, master, arr, depth):
 		
 		# parameters that you want to send through the Frame class. 
 		Frame.__init__(self, master)   
 
 		# allowing the widget to take the full space of the root window
 		self.pack(fill=BOTH, expand=1)
-
-		#reference to the master widget, which is the tk window                 
+              
 		self.master = master
-		# changing the title of our master widget      
 		self.master.title("BST")
-
-		self.canvas = Canvas(self)
-
-		root = arr[0]
-		numLeft = 0
-		numRight = 0
-		numLeaves = 0
-		for i in range(len(arr)):		# efficiency can be improved from O(n) here
-			if arr[i] != None:
-				if arr[i] < root:
-					numLeft += 1
-				else:
-					numRight += 1
-			else:
-				numLeaves += 1
-
-		rows = max(numLeft, numRight)
-		columns = int(2**math.ceil(math.log(numLeaves,2)))+1
-		mid = columns/2
+		self.canvas = Canvas(self, width=1270, height=800)
 
 
-		print("rows: {0}, cols: {1}, numLeaves: {2}, mid: {3}".format(rows, columns, numLeaves, mid))
+
+		# root = arr[0]
+		# numLeft = 0
+		# numRight = 0
+		# numLeaves = 0
+		# numRows = 0
+		# for i in range(len(arr)):		# efficiency can be improved from O(n) here
+		# 	if arr[i] != None:
+		# 		if arr[i].val < root.val:
+		# 			numLeft += 1
+		# 		else:
+		# 			numRight += 1
+		# 	else:
+		# 		numLeaves += 1
+
+
+		# print("numLeft: {0}, numRight: {1}".format(numLeft, numRight))
+
+		# maxrows = max(numLeft, numRight)
+		# columns = int(2**math.ceil(math.log(numLeaves,2)))*2
+		# columns = int(2**math.ceil(math.log(numLeaves,2))) # round to next highest power of 2
+		# columns = numLeaves*2
+
+
+		# print("len(arr) = {0}".format(len(arr)))
+		# maxcols = len(arr)
+		# columns = maxcols
+		# maxrows = maxcols/2
+		# mid = columns/2
+
+
+
+		
+
+
+		# print("maxrows: {0}, cols: {1}, numLeaves: {2}, mid: {3}".format(maxrows, columns, numLeaves, mid))
 		# n = 0
-		# for row in range(rows):
-		# 	for col in range(columns):
-		# 		Label(self.canvas, text=str(n)).grid(row=row, column=col)
+		# for row in range(10):
+		# 	for col in range(10):
+		# 		x =Label(self.canvas, text=" ")
+		# 		x.grid(row=row, column=col, ipadx=1, pady=10)
+		# 		x.config(font=('times',6,'bold'))
 		# 		n += 1
 
-		self.place(arr[0], 0, mid*2)
+		# self.placeOnGrid(node=arr[0], row=1, leftmost_col=0, rightmost_col=num_columns, depth)
+		# self.placeOnGrid(arr[0], 0, 8, 2)
+
+		num_columns = 2**depth + 1
+		print("columns: {0}".format(num_columns))
+
+		''' Calculate grid coordinates for all nodes '''
+		for i in range(len(arr)):
+			node = arr[i]
+			if node != None:
+
+				if i == 0:
+					''' root '''
+					node.grid_row = 0
+					node.grid_col = num_columns/2
+					n = Label(self.canvas, text=node.val)
+					n.grid(row=node.grid_row, column=node.grid_col, columnspan=1) 
+
+				else:
+
+					parent = node.parent
+					grandparent = parent.parent
+
+					if grandparent == None:
+						''' 1st row '''
+						if parent != arr[0]: raise Exception("Missing grandparent of non-root child: {0}".format(node.val))
+
+						elif node.val < parent.val:
+							leftmost_col = 0
+							rightmost_col = parent.grid_col
+						elif node.val > parent.val:
+							leftmost_col = parent.grid_col
+							rightmost_col = num_columns
+						else: raise Exception("Unexpected duplicate value: {0}".format(node.val))
+
+					elif node.val < parent.val:
+						# print("node val: {0}, parent val: {1}".format(node.val, parent.val))
+						# node.grid_col = parent.grid_col/2
+						rightmost_col = parent.grid_col
+
+						if parent.val < grandparent.val:
+							leftmost_col = 0
+
+						elif parent.val > grandparent.val:
+							leftmost_col = grandparent.grid_col
+
+						else: raise Exception("Unexpected duplicate value: {0}".format(parent.val))
 
 
-		''' MAP NODES ONTO GRID '''
-		''' (nodes may be null) '''
+					elif node.val > parent.val:
+						# print("node val: {0}, parent val: {1}".format(node.val, parent.val))
+						# node.grid_col = (parent.grid_col*3)/2
+						leftmost_col = parent.grid_col
 
-		# ARR IDX		GRID
-			# 0 ----- 0, 1*mid/1
-			
-			# 1 ----- 1, 1*mid/2
-			# 2 ----- 1, 3*mid/2
-			
-			# 3 ----- 2, 1*mid/4 
-			# 4 ----- 2, 3*mid/4
-			# 5 ----- 2, 5*mid/4
-			# 6 ----- 2, 7*mid/4
+						if parent.val < grandparent.val:
+							rightmost_col = grandparent.grid_col
 
-			# 7 ----- 3, 1*mid/8 
-			# 8 ----- 3, 3*mid/8
-			# 9 ----- 3, 5*mid/8
-			# 10 ---- 3, 7*mid/8
-			# 11 ---- 3, 9*mid/8 
-			# 12 ---- 3,11*mid/8
-			# 13 ---- 3,13*mid/8
-			# 14 ---- 3,15*mid/8
+						elif parent.val > grandparent.val:
+							rightmost_col = num_columns
 
+						else: raise Exception("Unexpected duplicate value: {0}".format(parent.val))
+						
+					else: raise Exception("Unexpected duplicate value: {0}".format(node.val))
 
+					node.grid_row = parent.grid_row + 1
+					node.grid_col = (leftmost_col+rightmost_col)/2
+
+					n = Label(self.canvas, text=node.val)
+					n.grid(row=node.grid_row, column=node.grid_col, columnspan=1) 
+
+				print("Val: {0}, Row: {1}, Col: {2}".format(node.val,node.grid_row, node.grid_col))
 
 
-
-		# text_fields = []
-
-		# Label(canvas,text="Specify either a singular cell \nor a range of cells (e.g. 6-14)").grid(row=0,column=0)
-		# for row in range(1,self.ROWS+1):
-		# 	Label(canvas, text="Cell(s) to stimulate:").grid(row=row, column=0)
-		# 	Label(canvas, text="Stimulation start:").grid(row=row, column=2)
-		# 	Label(canvas, text="Stimulation end:").grid(row=row, column=4)
-		# 	entry1 = Entry(canvas)
-		# 	entry2 = Entry(canvas)
-		# 	entry3 = Entry(canvas)
-		# 	entry1.grid(row=row, column=1)
-		# 	entry2.grid(row=row, column=3)			
-		# 	entry3.grid(row=row, column=5)
-		# 	self.text_fields.append(entry1)
-		# 	self.text_fields.append(entry2)
-		# 	self.text_fields.append(entry3)
-
-		# b = Button(canvas, text="ADD THIS TRIAL TO THE SCHEDULE", justify=CENTER, command=self.add_to_schedule).grid(row=self.ROWS+1, column=3)
 
 		self.canvas.pack(fill=Y, expand=True)
 
-		# self.text_fields = []
-		# self.ROWS = 10
-		# self.SCHEDULE = SCHEDULE
-
-		#with that, we want to then run init_window, which doesn't yet exist
-		# self.init_window()
 	
-	def place(self, node, row, col):
-		print("placing {0} at ({1},{2})".format(node.val, row, col))
-		if node != None:
-			Label(self.canvas, text=node.val).grid(row=row, column=col, columnspan=1)
-		if node.left != None:
-			self.place(node.left, row+1, col/2)
-		if node.right != None:
-			self.place(node.right, row+1, 3*col/2)
+	# def placeOnGrid(self, node, row, leftmost_col, rightmost_col, depth):
+	# 	labelfont = ('times', 10, 'bold')
+	# 	print("placing {0} at ({1},{2})".format(node.val, row, col))
 
+	# 	if node != None:
 
+	# 		# grid self
+	# 		n = Label(self.canvas, text=node.val)
+	# 		n.grid(row=node.grid_row, column=node.grid_col, columnspan=1) 
+	# 		n.config(font=labelfont)
+
+	# 		# shift_amt = 2**(depth-row) 
+	# 		# if shift_amt < 1:
+	# 		# 	raise Exception("Shift Amount Too Small")
+	# 		# print("shift_amt = 2^({0}-{1}) = 2^{2} = {3}".format(depth, row, depth-row,shift_amt))
+
+	# 		# grid children
+	# 		new_row = row + 1
+	# 		if node.left != None:
+	# 			new_col = col-shift_amt
+	# 			if new_col < 0: raise Exception("Incorrect column placement")
+	# 			self.placeOnGrid(node.left, row, new_col, depth)
+	# 		if node.right != None:
+	# 			new_col = col+shift_amt
+	# 			# if new_col > : raise Exception("Incorrect column placement")
+	# 			self.placeOnGrid(node.right, row, new_col, depth)
 
 
 	def client_exit(self):
@@ -327,6 +419,7 @@ class Window(Frame):
 
 	def quit(self):
 		self.master.destroy()
+
 
 
 class unitTester():
@@ -341,16 +434,28 @@ class unitTester():
 		self.tree.insert(18, self.tree.root)
 		self.tree.insert(13, self.tree.root)
 		self.tree.insert(8, self.tree.root)
-		self.tree.insert(5, self.tree.root)
-		self.tree.insert(17, self.tree.root)
-		self.tree.insert(29, self.tree.root)
-		self.tree.insert(26, self.tree.root)
-		self.tree.insert(4, self.tree.root)
-		self.tree.insert(14, self.tree.root)
-		self.tree.insert(16, self.tree.root)
-		self.tree.insert(1, self.tree.root)
+		# self.tree.insert(5, self.tree.root)
+		# self.tree.insert(17, self.tree.root)
+		# self.tree.insert(29, self.tree.root)
+		# self.tree.insert(26, self.tree.root)
+		# self.tree.insert(4, self.tree.root)
+		# self.tree.insert(14, self.tree.root)
+		# self.tree.insert(16, self.tree.root)
+		# self.tree.insert(1, self.tree.root)
 
-		self.tree.printout(self.tree.root)
+		# self.tree.insert(20, self.tree.root)
+		# self.tree.insert(5, self.tree.root)
+		# self.tree.insert(30, self.tree.root)
+		# self.tree.insert(15, self.tree.root)
+		# self.tree.insert(10, self.tree.root)
+
+		# for i in range(15):
+		# 	self.tree.insert(i, self.tree.root)
+
+
+
+
+		# self.tree.printout(self.tree.root)
 
 		test_results = self.tree.getNodesArray()
 		# convert node objects to node values
@@ -358,16 +463,22 @@ class unitTester():
 			node = test_results[i]
 			test_results[i] = node.val if node != None else None
 
-		expected_results = [15,3,20,1,13,18,27,None,None,8,14,17,None,26,29,5,None,None,None,16,None,None,None,None,None,4,None,None,None,None,None]
-		assert (test_results == expected_results), "TEST CASE FAILURE: BST.insert()\nResult  :\t {0}\nExpected:\t {1}".format(test_results, expected_results)
+		# expected_results = [15,3,20,1,13,18,27,None,None,8,14,17,None,26,29,5,None,None,None,16,None,None,None,None,None,4,None,None,None,None,None]
+		# assert (test_results == expected_results), "TEST CASE FAILURE: BST.insert()\nResult  :\t {0}\nExpected:\t {1}".format(test_results, expected_results)
 
-		self.tree.delete(20)
-		self.tree.printout(self.tree.root)
+		# self.tree.delete(20)
+		# self.tree.printout(self.tree.root)
+
+		# depth = self.tree.calculateDepth()
+		# print("depth: {0}".format(depth))
+		
 
 		self.tree.graph()
 
 
+
 		# expected_results = [15,3,20,1,13,18,27,None,None,8,14,17,None,26,29,5,None,None,None,16,None,None,None,None,None,4,None,None,None,None,None]
+
 
 
 if __name__ == '__main__':
